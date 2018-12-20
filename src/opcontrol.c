@@ -8,6 +8,7 @@
  */
 
 #include "main.h"
+#include <stdlib.h>
 
 /*
  * Runs the user operator control code. This function will be started in its own task with the
@@ -26,9 +27,53 @@
  *
  * This task should never exit; it should end with some kind of infinite loop, even if empty.
  */
+
+#define DEADZONE 50
+
+/*
+	FrontLeft = 2,
+	FrontRight = 7,
+	BackLeft = 3,
+	BackRight = 8,
+*/
+
+void moveRobot();
+void stopRobot();
+
 void operatorControl() {
 	while (1) {
-		printf("Hello PROS User!\n");
-		delay(20);
+		if (abs(joystickGetAnalog(1,3)) > DEADZONE || abs(joystickGetAnalog(1,4)) > DEADZONE || abs(joystickGetAnalog(1,1)) > DEADZONE)
+			moveRobot();
+		else
+		stopRobot();
 	}
+}
+
+
+void moveRobot()
+{
+	int control[3];
+	control[0] = joystickGetAnalog(1,3);
+	control[1] = joystickGetAnalog(1,1);
+	control[2] = joystickGetAnalog(1,4);
+
+	int frontLeftPower,
+			frontRightPower,
+			backLeftPower,
+			backRightPower = 0;
+
+	frontLeftPower = 0 - control[1] - control[0] + control[2];
+	frontRightPower = 0 - control[1] + control[0] + control[2];
+	backLeftPower = 0 - control[1] - control[0] - control[2];
+	backRightPower = 0 - control[1] + control[0] - control[2];
+
+	motorSet(2, frontLeftPower);
+	motorSet(7, frontRightPower);
+	motorSet(3, backLeftPower);
+	motorSet(8, backRightPower);
+}
+
+void stopRobot()
+{
+	motorStopAll();
 }
