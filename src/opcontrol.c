@@ -32,9 +32,11 @@
 
 /*
 	FrontLeft = 2,
-	FrontRight = 7,
-	BackLeft = 3,
-	BackRight = 8,
+	FrontRight = 3,
+	BackLeft = 4,
+	BackRight = 5,
+	WeightRight = 7
+	WeightLeft = 6
 */
 
 void moveRobot();
@@ -45,7 +47,22 @@ void operatorControl() {
 		if (abs(joystickGetAnalog(1,3)) > DEADZONE || abs(joystickGetAnalog(1,4)) > DEADZONE || abs(joystickGetAnalog(1,1)) > DEADZONE)
 			moveRobot();
 		else
-		stopRobot();
+			stopRobot();
+		if (joystickGetDigital(1,7, JOY_UP) || joystickGetDigital(1,7, JOY_DOWN))
+		{
+			if (joystickGetDigital(1,7,JOY_UP))
+			{
+				motorSet(6, 127);
+				motorSet(7, 127);
+			}
+			if (joystickGetDigital(1,7,JOY_DOWN))
+			{
+				motorSet(6, -127);
+				motorSet(7, -127);
+			}
+		}
+
+		delay(20);
 	}
 }
 
@@ -68,9 +85,9 @@ void moveRobot()
 	backRightPower = 0 - control[1] + control[0] - control[2];
 
 	motorSet(2, frontLeftPower);
-	motorSet(7, frontRightPower);
-	motorSet(3, backLeftPower);
-	motorSet(8, backRightPower);
+	motorSet(3, frontRightPower);
+	motorSet(4, backLeftPower);
+	motorSet(5, backRightPower);
 }
 
 void stopRobot()
