@@ -28,39 +28,56 @@
  * This task should never exit; it should end with some kind of infinite loop, even if empty.
  */
 
-#define DEADZONE 50
-
 /*
 	FrontLeft = 2,
 	FrontRight = 3,
 	BackLeft = 4,
 	BackRight = 5,
-	WeightRight = 7
-	WeightLeft = 6
+	Pickup = 6,
+	Shooter = 7,
+	Ramp = 8
 */
+
+#define DEADZONE 50
+
+int pickupIsActive = 0;
 
 void moveRobot();
 void stopRobot();
 
 void operatorControl() {
 	while (1) {
+
+		// Drive
 		if (abs(joystickGetAnalog(1,3)) > DEADZONE || abs(joystickGetAnalog(1,4)) > DEADZONE || abs(joystickGetAnalog(1,1)) > DEADZONE)
 			moveRobot();
 		else
 			stopRobot();
-		if (joystickGetDigital(1,7, JOY_UP) || joystickGetDigital(1,7, JOY_DOWN))
+
+		// Pickup
+		if (joystickGetDigital(1,7,JOY_LEFT))
 		{
-			if (joystickGetDigital(1,7,JOY_UP))
-			{
+			pickupIsActive = !pickupIsActive;
+
+			if (pickupIsActive)
 				motorSet(6, 127);
-				motorSet(7, 127);
-			}
-			if (joystickGetDigital(1,7,JOY_DOWN))
-			{
-				motorSet(6, -127);
-				motorSet(7, -127);
-			}
+			else if (!pickupIsActive)
+				motorStop(6);
 		}
+
+		// Shooter
+		if (joystickGetDigital(1, 5, JOY_DOWN))
+			motorSet(7, 127);
+		else if (joystickGetDigital(1, 5, JOY_UP))
+			motorStop(7);
+
+		// Ramp
+		if (joystickGetDigital(1, 6, JOY_UP))
+			motorSet(8, 127);
+		else if (joystickGetDigital(1, 6, JOY_DOWN))
+			motorSet(8, -127);
+		else
+			motorStop(8);
 
 		delay(20);
 	}
@@ -92,5 +109,8 @@ void moveRobot()
 
 void stopRobot()
 {
-	motorStopAll();
+	motorStop(2);
+	motorStop(3);
+	motorStop(4);
+	motorStop(5);
 }
