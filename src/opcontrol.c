@@ -29,6 +29,8 @@
  */
 
 /*
+
+	--- MOTORS ---
 	FrontLeft = 2,
 	FrontRight = 3,
 	BackLeft = 4,
@@ -36,7 +38,20 @@
 	Pickup = 6,
 	Shooter = 7,
 	Ramp = 8
+
+	--- SENSORS ---
+	SorterEncoder = 1/2
+
 */
+
+#define M_FRONT_LEFT 2
+#define M_FRONT_RIGHT 3
+#define M_BACK_LEFT 4
+#define M_BACK_RIGHT 5
+#define PICKUP 6
+#define SHOOTER 7
+#define RAMP 8
+#define SORTER 9
 
 #define DEADZONE 50
 
@@ -53,23 +68,33 @@ void operatorControl() {
 			moveRobot();
 		else
 			stopRobot();
+		// End drive
 
 		// Pickup
-		if (joystickGetDigital(1,7,JOY_LEFT))
-		{
-			pickupIsActive = !pickupIsActive;
+		if (digitalRead(4))
+			pickupIsActive = 0;
+		else
+			pickupIsActive = 1;
 
-			if (pickupIsActive)
-				motorSet(6, 127);
-			else if (!pickupIsActive)
-				motorStop(6);
+		if (joystickGetDigital(1, 7, JOY_LEFT))
+		{
+			motorSet(PICKUP, -127);
+			digitalWrite(3, HIGH);
 		}
+		else if (pickupIsActive)
+		{
+			motorSet(PICKUP, 127);
+			digitalWrite(3, LOW);
+		}
+		// End pickup
+
 
 		// Shooter
 		if (joystickGetDigital(1, 5, JOY_DOWN))
 			motorSet(7, 127);
 		else if (joystickGetDigital(1, 5, JOY_UP))
 			motorStop(7);
+		// End shooter
 
 		// Ramp
 		if (joystickGetDigital(1, 6, JOY_UP))
@@ -78,6 +103,7 @@ void operatorControl() {
 			motorSet(8, -127);
 		else
 			motorStop(8);
+		// End ramp
 
 		delay(20);
 	}
@@ -101,16 +127,16 @@ void moveRobot()
 	backLeftPower = 0 - control[1] - control[0] - control[2];
 	backRightPower = 0 - control[1] + control[0] - control[2];
 
-	motorSet(2, frontLeftPower);
-	motorSet(3, frontRightPower);
-	motorSet(4, backLeftPower);
-	motorSet(5, backRightPower);
+	motorSet(M_FRONT_LEFT, frontLeftPower);
+	motorSet(M_FRONT_RIGHT, frontRightPower);
+	motorSet(M_BACK_LEFT, backLeftPower);
+	motorSet(M_BACK_RIGHT, backRightPower);
 }
 
 void stopRobot()
 {
-	motorStop(2);
-	motorStop(3);
-	motorStop(4);
-	motorStop(5);
+	motorStop(M_FRONT_LEFT);
+	motorStop(M_FRONT_RIGHT);
+	motorStop(M_BACK_LEFT);
+	motorStop(M_BACK_RIGHT);
 }

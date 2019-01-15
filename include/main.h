@@ -94,6 +94,11 @@ void initialize();
  */
 void operatorControl();
 
+
+#define QUAD_TOP_PORT 1
+#define QUAD_BOTTOM_PORT 2
+Encoder sorter;
+
 // End C++ export structure
 #ifdef __cplusplus
 }
