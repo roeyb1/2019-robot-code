@@ -38,9 +38,12 @@
 	Pickup = 6,
 	Shooter = 7,
 	Ramp = 8
+	Sorter = 9
+	Lifter = 10
 
 	--- SENSORS ---
 	SorterEncoder = 1/2
+	Lifter_limit = 3
 
 */
 
@@ -48,14 +51,17 @@
 #define M_FRONT_RIGHT 3
 #define M_BACK_LEFT 4
 #define M_BACK_RIGHT 5
-#define PICKUP 6
+#define PICKUP 1
 #define SHOOTER 7
 #define RAMP 8
 #define SORTER 9
+#define LIFTER 6
 
 #define DEADZONE 50
 
 int pickupIsActive = 0;
+int lifterAtMax = 0;
+int lifterAtMin = 0;
 
 void moveRobot();
 void stopRobot();
@@ -71,39 +77,51 @@ void operatorControl() {
 		// End drive
 
 		// Pickup
-		if (digitalRead(4))
-			pickupIsActive = 0;
-		else
-			pickupIsActive = 1;
+		if (joystickGetDigital(1,7,JOY_RIGHT))
+			pickupIsActive = !pickupIsActive;
 
-		if (joystickGetDigital(1, 7, JOY_LEFT))
-		{
+		if (joystickGetDigital(1, 7, JOY_LEFT) && pickupIsActive)
 			motorSet(PICKUP, -127);
-			digitalWrite(3, HIGH);
-		}
 		else if (pickupIsActive)
-		{
 			motorSet(PICKUP, 127);
-			digitalWrite(3, LOW);
-		}
+		if (!pickupIsActive)
+			motorStop(PICKUP);
 		// End pickup
 
 
 		// Shooter
 		if (joystickGetDigital(1, 5, JOY_DOWN))
-			motorSet(7, 127);
+			motorSet(SHOOTER, 127);
 		else if (joystickGetDigital(1, 5, JOY_UP))
-			motorStop(7);
+			motorStop(SHOOTER);
 		// End shooter
 
 		// Ramp
 		if (joystickGetDigital(1, 6, JOY_UP))
-			motorSet(8, 127);
+			motorSet(RAMP, 127);
 		else if (joystickGetDigital(1, 6, JOY_DOWN))
-			motorSet(8, -127);
+			motorSet(RAMP, -127);
 		else
-			motorStop(8);
+			motorStop(RAMP);
 		// End ramp
+
+		// Lifter
+		if (digitalRead(3) == LOW)
+			lifterAtMax = 1;
+		else
+			lifterAtMax = 0;
+		if (digitalRead(4) == LOW)
+			lifterAtMin = 1;
+		else
+			lifterAtMin = 0;
+
+		if (joystickGetDigital(1,8,JOY_DOWN) && !lifterAtMax)
+			motorSet(LIFTER, 127);
+		else if (joystickGetDigital(1,8,JOY_DOWN) && !lifterAtMin)
+			motorSet(LIFTER, -127);
+		else
+			motorStop(LIFTER);
+		// End lifter
 
 		delay(20);
 	}
