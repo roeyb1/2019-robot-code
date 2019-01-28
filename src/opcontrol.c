@@ -62,13 +62,20 @@
 int pickupIsActive = 0;
 int lifterAtMax = 0;
 int lifterAtMin = 0;
+int sorterIsActive = 0;
+
+unsigned long pickupLastTime = 0;
+unsigned long sorterLastTime = 0;
+unsigned long debounceDelay = 100;
 
 void moveRobot();
 void stopRobot();
+void handlePickup(unsigned char buttonGroup, unsigned char button);
+void sortFriendly();
+void sortEnemy();
 
 void operatorControl() {
 	while (1) {
-
 		// Drive
 		if (abs(joystickGetAnalog(1,3)) > DEADZONE || abs(joystickGetAnalog(1,4)) > DEADZONE || abs(joystickGetAnalog(1,1)) > DEADZONE)
 			moveRobot();
@@ -78,14 +85,13 @@ void operatorControl() {
 
 		// Pickup
 		if (joystickGetDigital(1,7,JOY_RIGHT))
-			pickupIsActive = !pickupIsActive;
-
-		if (joystickGetDigital(1, 7, JOY_LEFT) && pickupIsActive)
-			motorSet(PICKUP, -127);
-		else if (pickupIsActive)
-			motorSet(PICKUP, 127);
-		if (!pickupIsActive)
-			motorStop(PICKUP);
+		{
+			handlePickup(7,JOY_RIGHT);
+			if (pickupIsActive)
+				motorSet(PICKUP, 127);
+			else
+				motorStop(PICKUP);
+		}
 		// End pickup
 
 
@@ -115,7 +121,7 @@ void operatorControl() {
 		else
 			lifterAtMin = 0;
 
-		if (joystickGetDigital(1,8,JOY_DOWN) && !lifterAtMax)
+		if (joystickGetDigital(1,8,JOY_UP) && !lifterAtMax)
 			motorSet(LIFTER, 127);
 		else if (joystickGetDigital(1,8,JOY_DOWN) && !lifterAtMin)
 			motorSet(LIFTER, -127);
@@ -123,6 +129,14 @@ void operatorControl() {
 			motorStop(LIFTER);
 		// End lifter
 
+
+		// Sorter
+		if (joystickGetDigital(1,8, JOY_LEFT))
+		{
+			sorterIsActive = 1;
+		}
+		sortFriendly();
+		// End sorter
 		delay(20);
 	}
 }
@@ -157,4 +171,28 @@ void stopRobot()
 	motorStop(M_FRONT_RIGHT);
 	motorStop(M_BACK_LEFT);
 	motorStop(M_BACK_RIGHT);
+}
+
+void handlePickup(unsigned char buttonGroup, unsigned char button)
+{
+	if ((millis() - pickupLastTime) > debounceDelay)
+	{
+		pickupIsActive = !pickupIsActive;
+		pickupLastTime = millis();
+	}
+}
+
+void sortFriendly()
+{
+	if (sorterIsActive)
+	{
+		if (encoderGet(sorter) <= 90)
+			motorSet(SORTER, 20);
+		else if (encoderGet(sorter) > 90)
+		{
+			motorStop(SORTER);
+			sorterIsActive = 0;
+			encoderReset(sorter);
+		}
+	}
 }

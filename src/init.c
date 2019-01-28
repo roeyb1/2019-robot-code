@@ -37,5 +37,5 @@ void initializeIO() {
  * can be implemented in this task if desired.
  */
 void initialize() {
-  sorter = encoderInit(QUAD_TOP_PORT, QUAD_BOTTOM_PORT, 0);
+  sorter = encoderInit(1, 2, 0);
 }
