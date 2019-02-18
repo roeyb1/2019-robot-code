@@ -47,6 +47,7 @@
 
 */
 
+// Motor ports
 #define M_FRONT_LEFT 2
 #define M_FRONT_RIGHT 3
 #define M_BACK_LEFT 4
@@ -57,12 +58,17 @@
 #define SORTER 9
 #define LIFTER 6
 
+//Sensor ports
+#define LIFTER_SENS_MAX 3
+#define LIFTER_SENS_MIN 4
+
 #define DEADZONE 50
 
 int pickupIsActive = 0;
 int lifterAtMax = 0;
 int lifterAtMin = 0;
-int sorterIsActive = 0;
+int sorterFriendly = 0;
+int sorterEnemy = 0;
 
 unsigned long pickupLastTime = 0;
 unsigned long sorterLastTime = 0;
@@ -71,8 +77,7 @@ unsigned long debounceDelay = 100;
 void moveRobot();
 void stopRobot();
 void handlePickup(unsigned char buttonGroup, unsigned char button);
-void sortFriendly();
-void sortEnemy();
+void sort();
 
 void operatorControl() {
 	while (1) {
@@ -97,7 +102,7 @@ void operatorControl() {
 
 		// Shooter
 		if (joystickGetDigital(1, 5, JOY_DOWN))
-			motorSet(SHOOTER, 127);
+			motorSet(SHOOTER, 80);
 		else if (joystickGetDigital(1, 5, JOY_UP))
 			motorStop(SHOOTER);
 		// End shooter
@@ -112,11 +117,11 @@ void operatorControl() {
 		// End ramp
 
 		// Lifter
-		if (digitalRead(3) == LOW)
+		if (digitalRead(LIFTER_SENS_MAX) == LOW) // low when switch is pressed
 			lifterAtMax = 1;
 		else
 			lifterAtMax = 0;
-		if (digitalRead(4) == LOW)
+		if (digitalRead(LIFTER_SENS_MIN) == LOW) // low when switch is pressed
 			lifterAtMin = 1;
 		else
 			lifterAtMin = 0;
@@ -131,12 +136,13 @@ void operatorControl() {
 
 
 		// Sorter
-		if (joystickGetDigital(1,8, JOY_LEFT))
-		{
-			sorterIsActive = 1;
-		}
-		sortFriendly();
+		if (joystickGetDigital(1,8, JOY_LEFT) && !sorterEnemy)
+			sorterFriendly = 1;
+		else if (joystickGetDigital(1,8, JOY_RIGHT) && !sorterFriendly)
+			sorterEnemy = 1;
+		sort();
 		// End sorter
+
 		delay(20);
 	}
 }
@@ -182,16 +188,27 @@ void handlePickup(unsigned char buttonGroup, unsigned char button)
 	}
 }
 
-void sortFriendly()
+void sort()
 {
-	if (sorterIsActive)
+	if (sorterFriendly && (!sorterEnemy))
 	{
 		if (encoderGet(sorter) <= 90)
 			motorSet(SORTER, 20);
 		else if (encoderGet(sorter) > 90)
 		{
 			motorStop(SORTER);
-			sorterIsActive = 0;
+			sorterFriendly = 0;
+			encoderReset(sorter);
+		}
+	}
+	else if (sorterEnemy && (!sorterFriendly))
+	{
+		if (encoderGet(sorter) >= -90)
+			motorSet(SORTER, -20);
+		else if (encoderGet(sorter) < -90)
+		{
+			motorStop(SORTER);
+			sorterEnemy = 0;
 			encoderReset(sorter);
 		}
 	}
