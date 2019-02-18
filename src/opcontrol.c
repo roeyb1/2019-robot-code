@@ -43,7 +43,9 @@
 
 	--- SENSORS ---
 	SorterEncoder = 1/2
-	Lifter_limit = 3
+	Lifter max = 3
+	Lifter min = 4
+	Arduino = 5
 
 */
 
@@ -61,6 +63,7 @@
 //Sensor ports
 #define LIFTER_SENS_MAX 3
 #define LIFTER_SENS_MIN 4
+#define ARDUINO_SENS_OUT 5
 
 #define DEADZONE 50
 
@@ -78,6 +81,7 @@ void moveRobot();
 void stopRobot();
 void handlePickup(unsigned char buttonGroup, unsigned char button);
 void sort();
+int getArduinoOut();
 
 void operatorControl() {
 	while (1) {
@@ -126,9 +130,11 @@ void operatorControl() {
 		else
 			lifterAtMin = 0;
 
-		if (joystickGetDigital(1,8,JOY_UP) && !lifterAtMax)
+		// Go up
+		if (joystickGetDigital(1,8,JOY_UP) && !lifterAtMax)	
 			motorSet(LIFTER, 127);
-		else if (joystickGetDigital(1,8,JOY_DOWN) && !lifterAtMin)
+		// Go down
+		else if (joystickGetDigital(1,8,JOY_DOWN) && !lifterAtMin) 
 			motorSet(LIFTER, -127);
 		else
 			motorStop(LIFTER);
@@ -136,12 +142,15 @@ void operatorControl() {
 
 
 		// Sorter
-		if (joystickGetDigital(1,8, JOY_LEFT) && !sorterEnemy)
+		// If either the manual input or the arduino input are set, set flags
+		if ((joystickGetDigital(1,8, JOY_LEFT) || getArduinoOut() == 0) && !sorterEnemy)
 			sorterFriendly = 1;
-		else if (joystickGetDigital(1,8, JOY_RIGHT) && !sorterFriendly)
+		else if ((joystickGetDigital(1,8, JOY_RIGHT) || getArduinoOut() == 1) && !sorterFriendly)
 			sorterEnemy = 1;
 		sort();
 		// End sorter
+
+		printf("Max: %d\nMin: %d\n-------------\n", lifterAtMax, lifterAtMin);
 
 		delay(20);
 	}
@@ -212,4 +221,19 @@ void sort()
 			encoderReset(sorter);
 		}
 	}
+}
+
+int getArduinoOut()
+{
+	// If the arduino ouput pin is high, the ball is enemy team therefore return 1
+	// otherwise return 0
+
+	// if (digitalRead(ARDUINO_OUT_PIN))
+	// 		return 1
+	// else
+	// 		return 0;
+
+
+	// Remove this and uncomment above when the code is ready
+	return 2;
 }
