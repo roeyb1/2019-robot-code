@@ -20,6 +20,7 @@
 void initializeIO() {
   pinMode(3, INPUT);
   pinMode(4, INPUT);
+  pinMode(7, INPUT);
   watchdogInit();
 }
 

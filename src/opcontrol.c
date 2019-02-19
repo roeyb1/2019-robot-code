@@ -59,13 +59,15 @@
 #define RAMP 8
 #define SORTER 9
 #define LIFTER 6
+#define MIXER 10
 
 //Sensor ports
 #define LIFTER_SENS_MAX 3
 #define LIFTER_SENS_MIN 4
-#define ARDUINO_SENS_OUT 5
+#define ARDUINO_SENS_OUT 7
 
-#define DEADZONE 50
+#define DEADZONE 20
+#define MIXER_SPEED 30
 
 int pickupIsActive = 0;
 int lifterAtMax = 0;
@@ -150,7 +152,9 @@ void operatorControl() {
 		sort();
 		// End sorter
 
-		printf("Max: %d\nMin: %d\n-------------\n", lifterAtMax, lifterAtMin);
+		printf("Max: %d\n", lifterAtMax);
+		printf("Min: %d\n", lifterAtMin);
+		printf("------------\n");
 
 		delay(20);
 	}
@@ -202,10 +206,14 @@ void sort()
 	if (sorterFriendly && (!sorterEnemy))
 	{
 		if (encoderGet(sorter) <= 90)
+		{
 			motorSet(SORTER, 20);
+			motorSet(MIXER, MIXER_SPEED);
+		}
 		else if (encoderGet(sorter) > 90)
 		{
 			motorStop(SORTER);
+			motorStop(MIXER);
 			sorterFriendly = 0;
 			encoderReset(sorter);
 		}
@@ -213,10 +221,14 @@ void sort()
 	else if (sorterEnemy && (!sorterFriendly))
 	{
 		if (encoderGet(sorter) >= -90)
+		{
 			motorSet(SORTER, -20);
+			motorSet(MIXER, MIXER_SPEED);
+		}
 		else if (encoderGet(sorter) < -90)
 		{
 			motorStop(SORTER);
+			motorStop(MIXER);
 			sorterEnemy = 0;
 			encoderReset(sorter);
 		}
@@ -228,12 +240,8 @@ int getArduinoOut()
 	// If the arduino ouput pin is high, the ball is enemy team therefore return 1
 	// otherwise return 0
 
-	// if (digitalRead(ARDUINO_OUT_PIN))
-	// 		return 1
-	// else
-	// 		return 0;
-
-
-	// Remove this and uncomment above when the code is ready
-	return 2;
+	if (digitalRead(ARDUINO_SENS_OUT))
+		return 1;
+	else
+		return 0;
 }
