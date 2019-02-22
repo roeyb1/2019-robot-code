@@ -28,26 +28,6 @@
  * This task should never exit; it should end with some kind of infinite loop, even if empty.
  */
 
-/*
-
-	--- MOTORS ---
-	FrontLeft = 2,
-	FrontRight = 3,
-	BackLeft = 4,
-	BackRight = 5,
-	Pickup = 6,
-	Shooter = 7,
-	Ramp = 8
-	Sorter = 9
-	Lifter = 10
-
-	--- SENSORS ---
-	SorterEncoder = 1/2
-	Lifter max = 3
-	Lifter min = 4
-	Arduino = 5
-
-*/
 
 // Motor ports
 #define M_FRONT_LEFT 2
@@ -61,7 +41,7 @@
 #define LIFTER 6
 #define MIXER 10
 
-//Sensor ports
+// Sensor (digital) ports
 #define LIFTER_SENS_MAX 3
 #define LIFTER_SENS_MIN 4
 #define ARDUINO_SENS_OUT 7
@@ -115,9 +95,9 @@ void operatorControl() {
 
 		// Ramp
 		if (joystickGetDigital(1, 6, JOY_UP))
-			motorSet(RAMP, 127);
+			motorSet(RAMP, 65);
 		else if (joystickGetDigital(1, 6, JOY_DOWN))
-			motorSet(RAMP, -127);
+			motorSet(RAMP, -65);
 		else
 			motorStop(RAMP);
 		// End ramp
@@ -133,10 +113,10 @@ void operatorControl() {
 			lifterAtMin = 0;
 
 		// Go up
-		if (joystickGetDigital(1,8,JOY_UP) && !lifterAtMax)	
+		if (joystickGetDigital(1,8,JOY_UP) && !lifterAtMax)
 			motorSet(LIFTER, 127);
 		// Go down
-		else if (joystickGetDigital(1,8,JOY_DOWN) && !lifterAtMin) 
+		else if (joystickGetDigital(1,8,JOY_DOWN) && !lifterAtMin)
 			motorSet(LIFTER, -127);
 		else
 			motorStop(LIFTER);
@@ -145,16 +125,21 @@ void operatorControl() {
 
 		// Sorter
 		// If either the manual input or the arduino input are set, set flags
-		if ((joystickGetDigital(1,8, JOY_LEFT) || getArduinoOut() == 0) && !sorterEnemy)
+		if ((joystickGetDigital(1,8, JOY_LEFT)) && !sorterEnemy)
 			sorterFriendly = 1;
-		else if ((joystickGetDigital(1,8, JOY_RIGHT) || getArduinoOut() == 1) && !sorterFriendly)
+		else if ((joystickGetDigital(1,8, JOY_RIGHT) == 1) && !sorterFriendly)
 			sorterEnemy = 1;
 		sort();
 		// End sorter
 
-		printf("Max: %d\n", lifterAtMax);
-		printf("Min: %d\n", lifterAtMin);
-		printf("------------\n");
+		// mixer
+		if (joystickGetDigital(1,7, JOY_UP))
+			motorSet(MIXER, -30);
+		else
+			motorSet(MIXER, 30);
+		//end mixer
+
+		printf("%d\n", encoderGet(sorter));
 
 		delay(20);
 	}
@@ -208,12 +193,10 @@ void sort()
 		if (encoderGet(sorter) <= 90)
 		{
 			motorSet(SORTER, 20);
-			motorSet(MIXER, MIXER_SPEED);
 		}
 		else if (encoderGet(sorter) > 90)
 		{
 			motorStop(SORTER);
-			motorStop(MIXER);
 			sorterFriendly = 0;
 			encoderReset(sorter);
 		}
@@ -223,12 +206,10 @@ void sort()
 		if (encoderGet(sorter) >= -90)
 		{
 			motorSet(SORTER, -20);
-			motorSet(MIXER, MIXER_SPEED);
 		}
 		else if (encoderGet(sorter) < -90)
 		{
 			motorStop(SORTER);
-			motorStop(MIXER);
 			sorterEnemy = 0;
 			encoderReset(sorter);
 		}
@@ -239,9 +220,9 @@ int getArduinoOut()
 {
 	// If the arduino ouput pin is high, the ball is enemy team therefore return 1
 	// otherwise return 0
-
-	if (digitalRead(ARDUINO_SENS_OUT))
-		return 1;
-	else
-		return 0;
+	//if (digitalRead(ARDUINO_SENS_OUT))
+	//	return 1;
+	//else
+	//	return 0;
+	return 2;
 }
