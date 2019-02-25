@@ -83,6 +83,11 @@ void operatorControl() {
 			else
 				motorStop(PICKUP);
 		}
+
+		if (joystickGetDigital(1, 7, JOY_LEFT))
+			motorSet(PICKUP, 127);
+		else if (!pickupIsActive)
+			motorStop(PICKUP);
 		// End pickup
 
 
